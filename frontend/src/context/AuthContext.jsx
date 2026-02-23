@@ -1,5 +1,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 
+import api from '@/lib/api'
+
 const AuthContext = createContext(null);
 
 const TOKEN_KEY = 'auth_token';
@@ -35,6 +37,7 @@ export function AuthProvider({ children }) {
 	function login(newToken, userData) {
 		localStorage.setItem(TOKEN_KEY, newToken);
 		setToken(newToken);
+		api.setJwtToken(newToken);
 		setUser(userData);
 	}
 
