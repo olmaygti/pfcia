@@ -166,11 +166,55 @@ Both functions always request `fmt=json`. Errors (network, missing API key) are 
   - `GET /eod-bulk-last-day/{EXCHANGE}?api_token=...&fmt=json`
 
 ## Environment Variables
-Store secrets in a `.env` file at the root (never commit this file):
+A single `.env` file at the **monorepo root** is the source of truth (never commit it).
+Both the backend and Vite are configured to load from this file:
+- Backend: `dotenv.config({ path: '../../.env' })` (relative to `backend/src/`)
+- Frontend: `envDir: '..'` in `vite.config.js` (one level up from `frontend/`)
+
+Copy `.env.example` → `.env` at the root and fill in all values:
 ```
 EODHD_API_KEY=your_key_here
 DATABASE_URL=postgresql://user:password@localhost:5432/stocks
+PORT=3000
+GOOGLE_CLIENT_ID=your_google_client_id_here
+JWT_SECRET=your_jwt_secret_here
+
+# Frontend (Vite exposes vars prefixed with VITE_)
+VITE_GOOGLE_CLIENT_ID=your_google_client_id_here
 ```
+
+## Authentication
+
+Google-only auth using **frontend token verification** (no Passport).
+
+### Auth flow
+1. Frontend renders `<GoogleLogin>` button (`@react-oauth/google`)
+2. User clicks → Google returns a signed **ID token** (`credential`)
+3. Frontend POSTs `{ credential }` to `POST /api/auth/google`
+4. Backend verifies with `google-auth-library`, extracts `sub` (googleId), `email`
+5. Backend `findOrCreate` User by `googleId`; new users get `role = USER`
+6. Backend signs its own JWT (`jsonwebtoken`) with `{ sub: userId, email, role }`, 7-day expiry
+7. Frontend stores JWT in `localStorage`, attaches as `Authorization: Bearer <token>`
+8. Protected routes use the `authenticate` middleware to verify JWTs
+
+### `users` table
+
+| Column | Type | Notes |
+|---|---|---|
+| id | INTEGER PK | auto-increment |
+| google_id | VARCHAR(255) UNIQUE | Google `sub` claim |
+| email | VARCHAR(255) UNIQUE NOT NULL | From Google token |
+| phone_number | VARCHAR(20) NULL | User-supplied later |
+| role | ENUM('USER','ADMIN') | Default `USER` |
+| created_at / updated_at | TIMESTAMP | Managed by Sequelize |
+
+### Key files
+- `backend/src/services/auth.js` — `verifyGoogleToken`, `findOrCreateUser`, `issueJwt`
+- `backend/src/middleware/authenticate.js` — JWT Bearer middleware
+- `backend/src/routes/auth.js` — `POST /api/auth/google`
+- `frontend/src/context/AuthContext.jsx` — user state, login/logout, token persistence
+- `frontend/src/pages/LoginPage.jsx` — Google Sign-In button
+- `frontend/src/components/ProtectedRoute.jsx` — redirect to `/login` if unauthenticated
 
 ## Notes
 > This file should be updated as new conventions, architectural decisions, or gotchas are discovered during development.

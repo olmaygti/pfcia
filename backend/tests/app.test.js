@@ -1,3 +1,7 @@
+jest.mock('../src/models', () => ({
+	User: { findOrCreate: jest.fn() },
+}));
+
 const request = require('supertest');
 const app = require('../src/app');
 

@@ -1,9 +1,29 @@
-function App() {
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
+import ProtectedRoute from './components/ProtectedRoute';
+import AppLayout from './components/layout/AppLayout';
+import LoginPage from './pages/LoginPage';
+import HomePage from './pages/HomePage';
+import TickersPage from './pages/TickersPage';
+
+export default function App() {
 	return (
-		<div className="min-h-screen bg-gray-950 text-white">
-			<h1 className="text-2xl font-bold p-4">Stock Market Analyzer</h1>
-		</div>
+		<BrowserRouter>
+			<AuthProvider>
+				<Routes>
+					<Route path="/login" element={<LoginPage />} />
+					<Route
+						element={
+							<ProtectedRoute>
+								<AppLayout />
+							</ProtectedRoute>
+						}
+					>
+						<Route path="/" element={<HomePage />} />
+						<Route path="/tickers" element={<TickersPage />} />
+					</Route>
+				</Routes>
+			</AuthProvider>
+		</BrowserRouter>
 	);
 }
-
-export default App;
