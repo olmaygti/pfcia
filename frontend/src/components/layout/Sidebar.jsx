@@ -1,9 +1,10 @@
 import { NavLink } from 'react-router-dom';
-import { Home, TrendingUp } from 'lucide-react';
+import { Home, TrendingUp, Landmark } from 'lucide-react';
 
 const NAV_ITEMS = [
 	{ to: '/', label: 'Home', icon: Home, end: true },
 	{ to: '/tickers', label: 'Tickers', icon: TrendingUp },
+	{ to: '/exchanges', label: 'Exchanges', icon: Landmark },
 ];
 
 function navClass({ isActive }) {

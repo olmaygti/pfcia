@@ -20,7 +20,7 @@ router.post('/google', async (req, res) => {
 	let payload;
 	try {
 		payload = await verifyGoogleToken(credential);
-	} catch (e) {
+	} catch {
 		return res.status(401).json({ error: 'Invalid Google token' });
 	}
 

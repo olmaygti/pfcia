@@ -5,6 +5,7 @@ import AppLayout from './components/layout/AppLayout';
 import LoginPage from './pages/LoginPage';
 import HomePage from './pages/HomePage';
 import TickersPage from './pages/TickersPage';
+import ExchangesPage from './pages/ExchangesPage';
 
 export default function App() {
 	return (
@@ -21,6 +22,7 @@ export default function App() {
 					>
 						<Route path="/" element={<HomePage />} />
 						<Route path="/tickers" element={<TickersPage />} />
+						<Route path="/exchanges" element={<ExchangesPage />} />
 					</Route>
 				</Routes>
 			</AuthProvider>

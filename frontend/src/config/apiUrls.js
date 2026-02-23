@@ -1,8 +1,5 @@
 // import {SET_NOTIFICATIONS } from 'root/actions'
 
-// import { Exchange } from 'models'
-
-
 const createRestConfig = (domainName, baseConfig = {}) => {
 	const namespace = `/${domainName[0].toLowerCase()}${domainName.slice(1)}`;
 	return {
@@ -33,6 +30,9 @@ export default {
 
 	// auth
 	googleLogin: { uri: '/api/auth/google', method: 'POST'},
+
+	// exchanges
+	listExchanges: { uri: '/api/exchanges', method: 'GET' },
 
 	// tickerSearch: { uri: '/ticker/search/{ticker}?exchange={exchange}', method: 'GET' },
 }
