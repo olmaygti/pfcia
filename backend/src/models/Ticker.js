@@ -1,7 +1,5 @@
-'use strict';
-
-const { DataTypes, Model } = require('sequelize');
-const sequelize = require('../db');
+import { DataTypes, Model } from 'sequelize';
+import sequelize from '../db.js';
 
 class Ticker extends Model {
 	/**
@@ -56,4 +54,4 @@ Ticker.init(
 	},
 );
 
-module.exports = Ticker;
+export default Ticker;

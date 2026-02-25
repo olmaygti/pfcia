@@ -1,7 +1,5 @@
-'use strict';
-
-const { DataTypes, Model } = require('sequelize');
-const sequelize = require('../db');
+import { DataTypes, Model } from 'sequelize';
+import sequelize from '../db.js';
 
 class EodPrice extends Model {}
 
@@ -66,4 +64,4 @@ EodPrice.init(
 	},
 );
 
-module.exports = EodPrice;
+export default EodPrice;

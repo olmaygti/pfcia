@@ -1,14 +1,13 @@
-'use strict';
-
-jest.mock('../../src/models', () => ({
+jest.mock('@/models/index.js', () => ({
 	User: { findOrCreate: jest.fn() },
 	Exchange: { findAll: jest.fn() },
 }));
+jest.mock('google-auth-library');
 
-const request = require('supertest');
-const jwt = require('jsonwebtoken');
-const app = require('../../src/app');
-const { Exchange } = require('../../src/models');
+import request from 'supertest';
+import jwt from 'jsonwebtoken';
+import app, { ready } from '../../src/app.js';
+import { Exchange } from '@/models/index.js';
 
 const SECRET = 'test-secret';
 
@@ -20,6 +19,8 @@ const MOCK_EXCHANGES = [
 	{ id: 1, code: 'LSE', name: 'London Stock Exchange', country: 'UK', currency: 'GBP' },
 	{ id: 2, code: 'US', name: 'NYSE', country: 'USA', currency: 'USD' },
 ];
+
+beforeAll(() => ready);
 
 describe('GET /api/exchanges', () => {
 	beforeEach(() => {

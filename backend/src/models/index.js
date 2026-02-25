@@ -1,10 +1,8 @@
-'use strict';
-
-const sequelize = require('../db');
-const Exchange = require('./Exchange');
-const Ticker = require('./Ticker');
-const EodPrice = require('./EodPrice');
-const User = require('./User');
+import sequelize from '../db.js';
+import Exchange from './Exchange.js';
+import Ticker from './Ticker.js';
+import EodPrice from './EodPrice.js';
+import User from './User.js';
 
 // Associations
 Exchange.hasMany(Ticker, { foreignKey: 'exchange_id', as: 'tickers' });
@@ -13,4 +11,4 @@ Ticker.belongsTo(Exchange, { foreignKey: 'exchange_id', as: 'exchange' });
 Ticker.hasMany(EodPrice, { foreignKey: 'ticker_id', as: 'eodPrices' });
 EodPrice.belongsTo(Ticker, { foreignKey: 'ticker_id', as: 'ticker' });
 
-module.exports = { sequelize, Exchange, Ticker, EodPrice, User };
+export { sequelize, Exchange, Ticker, EodPrice, User };

@@ -1,16 +1,17 @@
-'use strict';
-
 jest.mock('axios');
 
-const axios = require('axios');
-const { fetchTickerEod, fetchBulkLastDay } = require('../../src/services/eodhd');
+import axios from 'axios';
+import EodhdService from '@/services/eodhdService.js';
 
 const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 
-describe('eodhd service', () => {
+describe('EodhdService', () => {
+	let service;
+
 	beforeEach(() => {
 		process.env.EODHD_API_KEY = 'test-key';
 		jest.clearAllMocks();
+		service = new EodhdService();
 	});
 
 	afterEach(() => {
@@ -24,7 +25,7 @@ describe('eodhd service', () => {
 		it('calls the correct URL using symbol and exchange', async () => {
 			axios.get.mockResolvedValueOnce({ data: [] });
 
-			await fetchTickerEod('AAPL', 'US');
+			await service.fetchTickerEod('AAPL', 'US');
 
 			expect(axios.get).toHaveBeenCalledWith(
 				'https://eodhd.com/api/eod/AAPL.US',
@@ -35,7 +36,7 @@ describe('eodhd service', () => {
 		it('sends fmt=json and api_token', async () => {
 			axios.get.mockResolvedValueOnce({ data: [] });
 
-			await fetchTickerEod('AAPL', 'US');
+			await service.fetchTickerEod('AAPL', 'US');
 
 			expect(axios.get).toHaveBeenCalledWith(
 				expect.any(String),
@@ -51,7 +52,7 @@ describe('eodhd service', () => {
 		it('defaults from to 3 years ago and to to today', async () => {
 			axios.get.mockResolvedValueOnce({ data: [] });
 
-			await fetchTickerEod('AAPL', 'US');
+			await service.fetchTickerEod('AAPL', 'US');
 
 			const { params } = axios.get.mock.calls[0][1];
 			expect(params.from).toMatch(DATE_REGEX);
@@ -65,7 +66,7 @@ describe('eodhd service', () => {
 		it('uses provided from and to dates when given', async () => {
 			axios.get.mockResolvedValueOnce({ data: [] });
 
-			await fetchTickerEod('MCD', 'US', '2022-01-01', '2022-12-31');
+			await service.fetchTickerEod('MCD', 'US', '2022-01-01', '2022-12-31');
 
 			expect(axios.get).toHaveBeenCalledWith(
 				expect.any(String),
@@ -84,7 +85,7 @@ describe('eodhd service', () => {
 			];
 			axios.get.mockResolvedValueOnce({ data: mockData });
 
-			const result = await fetchTickerEod('AAPL', 'US');
+			const result = await service.fetchTickerEod('AAPL', 'US');
 
 			expect(result).toEqual(mockData);
 		});
@@ -92,13 +93,13 @@ describe('eodhd service', () => {
 		it('throws if EODHD_API_KEY is not set', async () => {
 			delete process.env.EODHD_API_KEY;
 
-			await expect(fetchTickerEod('AAPL', 'US')).rejects.toThrow('EODHD_API_KEY');
+			await expect(service.fetchTickerEod('AAPL', 'US')).rejects.toThrow('EODHD_API_KEY');
 		});
 
 		it('propagates axios errors', async () => {
 			axios.get.mockRejectedValueOnce(new Error('Network error'));
 
-			await expect(fetchTickerEod('AAPL', 'US')).rejects.toThrow('Network error');
+			await expect(service.fetchTickerEod('AAPL', 'US')).rejects.toThrow('Network error');
 		});
 	});
 
@@ -109,7 +110,7 @@ describe('eodhd service', () => {
 		it('calls the correct URL for the given exchange', async () => {
 			axios.get.mockResolvedValueOnce({ data: [] });
 
-			await fetchBulkLastDay('US');
+			await service.fetchBulkLastDay('US');
 
 			expect(axios.get).toHaveBeenCalledWith(
 				'https://eodhd.com/api/eod-bulk-last-day/US',
@@ -120,7 +121,7 @@ describe('eodhd service', () => {
 		it('sends fmt=json and api_token', async () => {
 			axios.get.mockResolvedValueOnce({ data: [] });
 
-			await fetchBulkLastDay('LSE');
+			await service.fetchBulkLastDay('LSE');
 
 			expect(axios.get).toHaveBeenCalledWith(
 				expect.any(String),
@@ -140,7 +141,7 @@ describe('eodhd service', () => {
 			];
 			axios.get.mockResolvedValueOnce({ data: mockData });
 
-			const result = await fetchBulkLastDay('US');
+			const result = await service.fetchBulkLastDay('US');
 
 			expect(result).toEqual(mockData);
 		});
@@ -148,13 +149,13 @@ describe('eodhd service', () => {
 		it('throws if EODHD_API_KEY is not set', async () => {
 			delete process.env.EODHD_API_KEY;
 
-			await expect(fetchBulkLastDay('US')).rejects.toThrow('EODHD_API_KEY');
+			await expect(service.fetchBulkLastDay('US')).rejects.toThrow('EODHD_API_KEY');
 		});
 
 		it('propagates axios errors', async () => {
 			axios.get.mockRejectedValueOnce(new Error('Network error'));
 
-			await expect(fetchBulkLastDay('US')).rejects.toThrow('Network error');
+			await expect(service.fetchBulkLastDay('US')).rejects.toThrow('Network error');
 		});
 	});
 });
