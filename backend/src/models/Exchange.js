@@ -61,6 +61,12 @@ Exchange.init(
 			field: 'close_utc_summer',
 			comment: 'Market close time in UTC during summer/daylight saving time (HH:MM)',
 		},
+		imported: {
+			type: DataTypes.BOOLEAN,
+			allowNull: false,
+			defaultValue: false,
+			comment: 'True once the top 100 tickers have been imported for this exchange',
+		},
 	},
 	{
 		sequelize,

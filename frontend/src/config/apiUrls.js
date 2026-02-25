@@ -33,6 +33,7 @@ export default {
 
 	// exchanges
 	listExchanges: { uri: '/api/exchanges', method: 'GET' },
+	importExchange: { uri: '/api/exchanges/import/{code}', method: 'POST' },
 
 	// tickerSearch: { uri: '/ticker/search/{ticker}?exchange={exchange}', method: 'GET' },
 }

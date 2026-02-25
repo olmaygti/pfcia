@@ -5,6 +5,7 @@ import { ApplicationContext } from '@/ioc';
 // Register services with the ApplicationContext
 import '@/services/authService.js';
 import '@/services/eodhdService.js';
+import '@/services/importExchangeService.js';
 
 // Register controllers with the ApplicationContext
 import '@/controllers/authController.js';
