@@ -211,10 +211,112 @@ Google-only auth using **frontend token verification** (no Passport).
 ### Key files
 - `backend/src/services/auth.js` — `verifyGoogleToken`, `findOrCreateUser`, `issueJwt`
 - `backend/src/middleware/authenticate.js` — JWT Bearer middleware
-- `backend/src/routes/auth.js` — `POST /api/auth/google`
+- `backend/src/controllers/authController.js` — `POST /api/auth/google` (via IoC)
 - `frontend/src/context/AuthContext.jsx` — user state, login/logout, token persistence
 - `frontend/src/pages/LoginPage.jsx` — Google Sign-In button
 - `frontend/src/components/ProtectedRoute.jsx` — redirect to `/login` if unauthenticated
+
+## Inversion of Control (IoC) / Dependency Injection
+
+The backend uses a custom IoC system (inspired by Spring) located in `backend/src/ioc/`. Controllers are registered via decorators and auto-wired by `ControllerRegistry` into Express routes.
+
+### `ApplicationContext`
+
+Central registry for all beans (services and controllers). Behaves as a singleton per execution context.
+
+- `ApplicationContext.constructors` — static map of `beanName → constructorFn`, populated by `@Bean` at class-load time
+- `ApplicationContext.getControllers()` — returns entries in `constructors` where `target.__META__.type === 'Controller'`
+- `ApplicationContext.getCurrentCtx().getBean(name)` — resolves (or lazily constructs) a bean by name
+- Bean names are the uncapitalised class name: `ExchangeController` → `'exchangeController'`
+
+### `ControllerRegistry`
+
+A singleton `@Bean` that reads all registered controllers from `ApplicationContext` and mounts them as Express routes. Called once from `app.js` during startup via `bean.registerControllers(app)`.
+
+For each controller method that has `@HttpMethod` metadata, it registers an Express route, optionally wrapping it with the `authenticate` middleware when `@Secured()` is present.
+
+### Decorators
+
+#### `@Bean({ scope?, beanName?, beanConstructor? })`
+Class-level. Registers the class with `ApplicationContext.constructors`.
+- `scope`: `Bean.SCOPES.SINGLETON` (default) or `Bean.SCOPES.PROTOTYPE` (new instance per `getBean` call)
+- `beanName`: overrides the default uncapitalised class name
+
+#### `@Controller(basePath)`
+Class-level. Marks a class as an HTTP controller. Internally calls `@Bean({ scope: PROTOTYPE })`, so each request gets a fresh instance. Sets `__META__.type = 'Controller'` and `__META__.basePath`.
+
+```js
+@Controller('/api/exchanges')
+export default class ExchangeController { ... }
+```
+
+#### `@HttpMethod(method, path, middleware?)`
+Method-level. Stores route metadata in `method.__META__`. `method` is an HTTP verb (`'GET'`, `'POST'`, etc.), `path` is relative to the controller's `basePath`.
+
+```js
+@HttpMethod('GET', '/')
+async list(req, res) { ... }
+```
+
+#### `@Secured()`
+Can be applied at class or method level. Sets `__META__.isSecured = true`. When `ControllerRegistry` detects this on a controller class, **all** its routes are protected by the `authenticate` JWT middleware.
+
+```js
+@Controller('/api/exchanges')
+@Secured()
+export default class ExchangeController { ... }
+```
+
+#### `@Inject(...beanNames)`
+Method-level. Before invoking the decorated method, resolves the named beans from `ApplicationContext` and attaches them to `this`. Missing beans resolve to `null` (gracefully ignored).
+
+```js
+@Inject('myService')
+async list(req, res) {
+  // this.myService is available here
+}
+```
+
+### How to create a new controller
+
+1. Create `src/controllers/myController.js`:
+```js
+import { Controller, HttpMethod, Secured } from '@/ioc';
+
+@Controller('/api/my-resource')
+@Secured()                          // omit for public endpoints
+export default class MyController {
+  @HttpMethod('GET', '/')
+  async list(req, res) {
+    return []; // return data — ControllerRegistry calls res.json() automatically
+  }
+
+  @HttpMethod('POST', '/')
+  async create(req, res) {
+    // for non-2xx responses, call res.status(X).json(...) and return (not the return value)
+    res.status(400).json({ error: 'bad input' });
+  }
+}
+```
+
+2. Import it in `app.js` (side-effect import to trigger registration):
+```js
+import '@/controllers/myController.js';
+```
+
+### Route response convention
+
+`ControllerRegistry` uses `if (result) res.json(result)` after calling the handler:
+- **Return a plain object/array** → `ControllerRegistry` sends it as JSON `200`
+- **Call `res.status(X).json(...)` then bare `return`** → `ControllerRegistry` sees `undefined` and does not double-send
+
+### Key files
+- `backend/src/ioc/applicationContext.js` — bean registry and lifecycle
+- `backend/src/ioc/controllerRegistry.js` — wires controllers into Express
+- `backend/src/ioc/decorators/` — `bean.js`, `controller.js`, `httpMethod.js`, `secured.js`
+- `backend/src/ioc/inject.js` — `@Inject` decorator
+- `backend/src/ioc/index.js` — barrel export of all IoC exports
+- `backend/src/controllers/` — controller classes (one file per controller)
 
 ## Notes
 > This file should be updated as new conventions, architectural decisions, or gotchas are discovered during development.

@@ -17,7 +17,7 @@ export default class ControllerRegistry {
 
 			Object.getOwnPropertyNames(clazz.prototype).forEach(propName => {
 				const propDescriptor = Object.getOwnPropertyDescriptor(clazz.prototype, propName)
-				if (propDescriptor.value.__META__ && propDescriptor.value.__META__.method) {
+				if (propDescriptor.value?.__META__?.method) {
 					const methodMeta = propDescriptor.value.__META__
 					const url = `${baseMeta.basePath}${methodMeta.path}`
 					isSecured = isSecured || methodMeta.isSecured;
