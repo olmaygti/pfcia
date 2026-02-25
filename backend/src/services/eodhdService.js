@@ -25,6 +25,20 @@ export default class EodhdService {
 	}
 
 	/**
+	 * Fetch the full list of tickers for a given exchange, including name and currency.
+	 * @param {string} exchange - Exchange code, e.g. 'US'
+	 */
+	async listExchangeTickers(exchange) {
+		const { data } = await axios.get(`${BASE_URL}/exchange-symbol-list/${exchange}`, {
+			params: {
+				api_token: this.getApiKey(),
+				fmt: 'json',
+			},
+		});
+		return data;
+	}
+
+	/**
 	 * Fetch bulk last-day EOD data for all tickers in a given market.
 	 * @param {string} exchange - Exchange code, e.g. 'US'
 	 */

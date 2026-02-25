@@ -104,6 +104,62 @@ describe('EodhdService', () => {
 	});
 
 	// ---------------------------------------------------------------------------
+	// listExchangeTickers
+	// ---------------------------------------------------------------------------
+	describe('listExchangeTickers', () => {
+		it('calls the correct URL for the given exchange', async () => {
+			axios.get.mockResolvedValueOnce({ data: [] });
+
+			await service.listExchangeTickers('US');
+
+			expect(axios.get).toHaveBeenCalledWith(
+				'https://eodhd.com/api/exchange-symbol-list/US',
+				expect.any(Object),
+			);
+		});
+
+		it('sends fmt=json and api_token', async () => {
+			axios.get.mockResolvedValueOnce({ data: [] });
+
+			await service.listExchangeTickers('LSE');
+
+			expect(axios.get).toHaveBeenCalledWith(
+				expect.any(String),
+				expect.objectContaining({
+					params: expect.objectContaining({
+						fmt: 'json',
+						api_token: 'test-key',
+					}),
+				}),
+			);
+		});
+
+		it('returns the data from the API response', async () => {
+			const mockData = [
+				{ Code: 'AAPL', Name: 'Apple Inc', Currency: 'USD', Type: 'Common Stock' },
+				{ Code: 'MSFT', Name: 'Microsoft Corp', Currency: 'USD', Type: 'Common Stock' },
+			];
+			axios.get.mockResolvedValueOnce({ data: mockData });
+
+			const result = await service.listExchangeTickers('US');
+
+			expect(result).toEqual(mockData);
+		});
+
+		it('throws if EODHD_API_KEY is not set', async () => {
+			delete process.env.EODHD_API_KEY;
+
+			await expect(service.listExchangeTickers('US')).rejects.toThrow('EODHD_API_KEY');
+		});
+
+		it('propagates axios errors', async () => {
+			axios.get.mockRejectedValueOnce(new Error('Network error'));
+
+			await expect(service.listExchangeTickers('US')).rejects.toThrow('Network error');
+		});
+	});
+
+	// ---------------------------------------------------------------------------
 	// fetchBulkLastDay
 	// ---------------------------------------------------------------------------
 	describe('fetchBulkLastDay', () => {

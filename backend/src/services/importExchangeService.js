@@ -19,14 +19,22 @@ export default class ImportExchangeService {
 			throw new Error(`Exchange not found: ${exchangeCode}`);
 		}
 
-		const bulkData = await this.eodhdService.fetchBulkLastDay(exchangeCode);
+		const [bulkData, symbolList] = await Promise.all([
+			this.eodhdService.fetchBulkLastDay(exchangeCode),
+			this.eodhdService.listExchangeTickers(exchangeCode),
+		]);
+
+		const nameMap = Object.fromEntries(
+			symbolList.map(s => [s.Code, { name: s.Name ?? null, currency: s.Currency ?? null }]),
+		);
+
 		const top100 = [...bulkData]
 			.sort((a, b) => (b.volume ?? 0) - (a.volume ?? 0))
 			.slice(0, TOP_N);
 
 		for (const item of top100) {
 			try {
-				await this.importTicker(item, exchange);
+				await this.importTicker({ ...item, ...(nameMap[item.code] ?? {}) }, exchange);
 			} catch (err) {
 				logger.error({ err, ticker: item.code }, 'Failed to import ticker');
 			}

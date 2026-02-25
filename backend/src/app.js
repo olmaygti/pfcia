@@ -10,6 +10,7 @@ import '@/services/importExchangeService.js';
 // Register controllers with the ApplicationContext
 import '@/controllers/authController.js';
 import '@/controllers/exchangeController.js';
+import '@/controllers/tickerController.js';
 
 const app = express();
 

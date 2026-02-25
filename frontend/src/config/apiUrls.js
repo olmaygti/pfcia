@@ -35,5 +35,7 @@ export default {
 	listExchanges: { uri: '/api/exchanges', method: 'GET' },
 	importExchange: { uri: '/api/exchanges/import/{code}', method: 'POST' },
 
-	// tickerSearch: { uri: '/ticker/search/{ticker}?exchange={exchange}', method: 'GET' },
+	// tickers
+	searchTickers: { uri: '/api/tickers/search?q={q}', method: 'GET' },
+	getTickerEod:  { uri: '/api/tickers/{id}/eod', method: 'GET' },
 }
