@@ -1,4 +1,5 @@
 import ApplicationContext from '../applicationContext';
+import { logger } from '@/utils';
 
 export default function Inject(...resources) {
     return (target, key, descriptor) => {
@@ -7,7 +8,7 @@ export default function Inject(...resources) {
             const applicationContext = new ApplicationContext();
             const event = args[0];
             resources.forEach((resource) => {
-                console.debug(`Injecting ${resource} into ${key}`);
+                logger.debug(`Injecting ${resource} into ${key}`);
                 applicationContext.injectBean(resource, event, this);
             });
             await Promise.all(this.initTasks).then(() => delete this.initTasks);

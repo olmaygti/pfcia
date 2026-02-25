@@ -1,4 +1,5 @@
 import { Bean, Inject } from '@/ioc';
+import { logger } from '@/utils';
 import { Exchange, Ticker, EodPrice } from '@/models/index.js';
 
 const TOP_N = 100;
@@ -27,7 +28,7 @@ export default class ImportExchangeService {
 			try {
 				await this.importTicker(item, exchange);
 			} catch (err) {
-				console.error(`Failed to import ticker ${item.code}:`, err.message);
+				logger.error({ err, ticker: item.code }, 'Failed to import ticker');
 			}
 		}
 	}
