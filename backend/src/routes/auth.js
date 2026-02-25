@@ -1,7 +1,5 @@
-'use strict';
-
-const { Router } = require('express');
-const { verifyGoogleToken, findOrCreateUser, issueJwt } = require('../services/auth');
+import { Router } from 'express';
+import { verifyGoogleToken, findOrCreateUser, issueJwt } from '@/services/auth.js';
 
 const router = Router();
 
@@ -33,4 +31,4 @@ router.post('/google', async (req, res) => {
 	});
 });
 
-module.exports = router;
+export default router;

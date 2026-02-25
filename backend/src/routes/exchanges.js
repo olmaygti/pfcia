@@ -1,8 +1,5 @@
-'use strict';
-
-const { Router } = require('express');
-const authenticate = require('../middleware/authenticate');
-const { Exchange } = require('../models');
+import { Router } from 'express';
+import { Exchange } from '@/models/index.js';
 
 const router = Router();
 
@@ -11,9 +8,9 @@ const router = Router();
  * Returns all exchanges ordered by code.
  * Requires a valid JWT.
  */
-router.get('/', authenticate, async (req, res) => {
+router.get('/', async (req, res) => {
 	const exchanges = await Exchange.findAll({ order: [['code', 'ASC']] });
 	return res.json(exchanges);
 });
 
-module.exports = router;
+export default router;

@@ -1,8 +1,11 @@
-if (process.env.NODE_ENV !== "production") {
-	require("dotenv").config();
+import dotenv from 'dotenv';
+
+if (process.env.NODE_ENV !== 'production') {
+	dotenv.config();
 }
 
-const app = require('./app');
+// Dynamic import ensures env vars are set before any module reads process.env
+const { default: app } = await import('./app.js');
 
 const PORT = process.env.PORT || 3000;
 

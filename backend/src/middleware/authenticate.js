@@ -1,6 +1,4 @@
-'use strict';
-
-const jwt = require('jsonwebtoken');
+import jwt from 'jsonwebtoken';
 
 /**
  * Express middleware that verifies a JWT Bearer token.
@@ -25,4 +23,4 @@ function authenticate(req, res, next) {
 	}
 }
 
-module.exports = authenticate;
+export default authenticate;

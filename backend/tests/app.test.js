@@ -1,9 +1,13 @@
-jest.mock('../src/models', () => ({
+jest.mock('@/models/index.js', () => ({
 	User: { findOrCreate: jest.fn() },
+	Exchange: { findAll: jest.fn() },
 }));
+jest.mock('google-auth-library');
 
-const request = require('supertest');
-const app = require('../src/app');
+import request from 'supertest';
+import app, { ready } from '../src/app.js';
+
+beforeAll(() => ready);
 
 describe('Health check', () => {
 	it('GET /health returns ok', async () => {

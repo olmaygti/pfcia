@@ -1,7 +1,5 @@
-'use strict';
-
-const jwt = require('jsonwebtoken');
-const authenticate = require('../../src/middleware/authenticate');
+import jwt from 'jsonwebtoken';
+import authenticate from '@/middleware/authenticate.js';
 
 function makeReq(authHeader) {
 	return { headers: { authorization: authHeader } };
