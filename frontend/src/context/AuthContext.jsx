@@ -25,6 +25,7 @@ export function AuthProvider({ children }) {
 		if (stored) {
 			const payload = decodeJwtPayload(stored);
 			if (payload && payload.exp * 1000 > Date.now()) {
+				api.setJwtToken(stored);
 				setToken(stored);
 				setUser({ id: payload.sub, email: payload.email, role: payload.role });
 			} else {
