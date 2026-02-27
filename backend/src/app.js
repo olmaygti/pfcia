@@ -12,6 +12,9 @@ import '@/controllers/authController.js';
 import '@/controllers/exchangeController.js';
 import '@/controllers/tickerController.js';
 
+// Register broker module
+import '@/broker'
+
 const app = express();
 
 app.use(cors());
@@ -24,9 +27,21 @@ app.get('/health', (req, res) => {
 async function init() {
 	const bean = await ApplicationContext.getCurrentCtx().getBean('controllerRegistry');
 	bean.registerControllers(app);
+
+	// Initializing all beans at startup
+	await Promise.all(Object.keys(ApplicationContext.constructors)
+		.map(beanName => ApplicationContext.getCurrentCtx().getBean(beanName)))
+
+	await ApplicationContext.getCurrentCtx().executionStarted();
 }
 
-export const ready = init()
-	.then(() => ApplicationContext.getCurrentCtx().executionStarted());
+process.on('SIGINT', function() {
+    console.info("Caught interrupt signal");
+	ApplicationContext.getCurrentCtx().executionFinished();
+    process.exit();
+});
+
+
+init()
 
 export default app;
