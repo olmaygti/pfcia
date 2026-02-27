@@ -15,6 +15,7 @@ import { Exchange, Ticker, EodPrice } from '@/models/index.js';
 const mockEodhdService = {
 	fetchBulkLastDay: jest.fn(),
 	fetchTickerEod: jest.fn(),
+	listExchangeTickers: jest.fn(),
 };
 
 ApplicationContext.constructors = {
@@ -57,6 +58,7 @@ describe('ImportExchangeService', () => {
 		// Default happy-path mocks
 		mockEodhdService.fetchBulkLastDay.mockResolvedValue(makeBulkData(3));
 		mockEodhdService.fetchTickerEod.mockResolvedValue(MOCK_EOD_PRICES);
+		mockEodhdService.listExchangeTickers.mockResolvedValue([]);
 		Exchange.findOne.mockResolvedValue(MOCK_EXCHANGE);
 		Ticker.findOrCreate.mockResolvedValue([MOCK_TICKER, true]);
 		EodPrice.bulkCreate.mockResolvedValue([]);
@@ -110,6 +112,45 @@ describe('ImportExchangeService', () => {
 			await service.importExchange('US');
 
 			expect(Ticker.findOrCreate).toHaveBeenCalledTimes(100);
+		});
+
+		it('fetches bulk data and symbol list for the exchange', async () => {
+			await service.importExchange('US');
+
+			expect(mockEodhdService.fetchBulkLastDay).toHaveBeenCalledWith('US');
+			expect(mockEodhdService.listExchangeTickers).toHaveBeenCalledWith('US');
+		});
+
+		it('enriches tickers with name and currency from the symbol list', async () => {
+			mockEodhdService.fetchBulkLastDay.mockResolvedValue([
+				{ code: 'AAPL', volume: 1000 },
+			]);
+			mockEodhdService.listExchangeTickers.mockResolvedValue([
+				{ Code: 'AAPL', Name: 'Apple Inc.', Currency: 'USD' },
+			]);
+			mockEodhdService.fetchTickerEod.mockResolvedValue([]);
+
+			await service.importExchange('US');
+
+			expect(Ticker.findOrCreate).toHaveBeenCalledWith({
+				where: { symbol: 'AAPL', exchangeId: MOCK_EXCHANGE.id },
+				defaults: { name: 'Apple Inc.', currency: 'USD', isTracked: true },
+			});
+		});
+
+		it('falls back to null name and currency when ticker is absent from the symbol list', async () => {
+			mockEodhdService.fetchBulkLastDay.mockResolvedValue([
+				{ code: 'UNKNOWN', volume: 1000 },
+			]);
+			mockEodhdService.listExchangeTickers.mockResolvedValue([]);
+			mockEodhdService.fetchTickerEod.mockResolvedValue([]);
+
+			await service.importExchange('US');
+
+			expect(Ticker.findOrCreate).toHaveBeenCalledWith({
+				where: { symbol: 'UNKNOWN', exchangeId: MOCK_EXCHANGE.id },
+				defaults: { name: null, currency: null, isTracked: true },
+			});
 		});
 
 		it('continues importing remaining tickers when one fails', async () => {

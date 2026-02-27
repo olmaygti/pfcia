@@ -1,5 +1,6 @@
 import { v1 as uuid } from 'uuid';
 import Bean from './decorators/bean';
+import { logger } from '@/utils';
 
 let application;
 
@@ -12,7 +13,7 @@ export default class ApplicationContext {
         }
         this.context = {};
         this.uuid = uuid();
-        console.debug(`ApplicationContext created with ${this.uuid}`);
+        logger.debug(`ApplicationContext created with ${this.uuid}`);
         application = this;
         this.readyPromise = new Promise((resolve) => this.setReady = resolve)
     }
@@ -90,9 +91,9 @@ export default class ApplicationContext {
     }
 
     async getBean(resource, event) {
-        console.debug(`getBean call for ${resource} with context${this.uuid}: ${Object.keys(this.context)}`);
+        logger.debug(`getBean call for ${resource} with context${this.uuid}: ${Object.keys(this.context)}`);
         if (this.context[resource] || this.context[`${resource}Promise`]) {
-            console.debug(`Getting ${resource} from context ${this.context[resource] && this.context[resource].beanUuid}`);
+            logger.debug(`Getting ${resource} from context ${this.context[resource] && this.context[resource].beanUuid}`);
             return this.context[resource] || this.context[`${resource}Promise`];
         }
 
@@ -102,7 +103,7 @@ export default class ApplicationContext {
             this.context[`${resource}Promise`] = new Promise((resolve, reject) => {
                 deferred = { resolve, reject };
             });
-            console.debug(`Constructing ${resource}`);
+            logger.debug(`Constructing ${resource}`);
             let beanDependencies;
             if (beanConstructor.inject) {
                 beanDependencies = await Promise.all(beanConstructor.inject.map((dependency) => {
@@ -116,10 +117,10 @@ export default class ApplicationContext {
                     this.context[resource] = obj;
                 }
                 obj.beanUuid = uuid();
-                console.debug(`${resource} created with ${obj.beanUuid}`);
+                logger.debug(`${resource} created with ${obj.beanUuid}`);
                 deferred.resolve(obj);
             }).catch((err) => {
-                console.error(`Error while constructing ${resource}`, err);
+                logger.error({ err, resource }, 'Error while constructing bean');
                 deferred.resolve();
                 delete this.context[`${resource}Promise`];
             });
