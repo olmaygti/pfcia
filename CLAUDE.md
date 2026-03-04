@@ -40,6 +40,7 @@ A stock market analyzer that automatically identifies trends in stocks to genera
 - Use **tabs** for indentation, never spaces
 - Always use camel case in code files
 - PWA architecture must always be kept in mind when making frontend decisions
+- **Always add meaningful logs** to every new file. Services and processors must log key lifecycle events: start of an operation, skipped conditions (with reason), per-item progress at `debug` level, and completion summaries at `info` level. Use structured log fields (`{ exchange, ticker, date }`) alongside the message string.
 
 ### Git & Delivery
 - **Never commit or push changes** — only modify files; the developer handles all commits

@@ -8,6 +8,8 @@ import { logger } from '@/utils';
 export default class StatisticsCalculatorService {
 	@Inject('producer')
 	async calculateForTicker(ticker, numberOfDays, fromImport) {
+		logger.info({ tickerId: ticker.id }, `Calculating stats for ticker ${ticker.id} (${numberOfDays} day(s))`);
+
 		const prices = await EodPrice.findAll({
 			where: { tickerId: ticker.id },
 			order: [['date', 'DESC']],
@@ -20,16 +22,17 @@ export default class StatisticsCalculatorService {
 					Object.values(calculators).map(statFn => statFn(ticker.id, price.date)),
 				);
 
-				results
-					.filter(Boolean)
-					.forEach(statistic => {
-						this.producer.send(EVENTS.STAT_CREATED, {
-							statisticId: statistic.id,
-							tickerId: ticker.id,
-							date: price.date,
-							fromImport,
-						});
+				const stats = results.filter(Boolean);
+				logger.debug({ tickerId: ticker.id, date: price.date }, `${stats.length} stat(s) calculated for ${price.date}`);
+
+				stats.forEach(statistic => {
+					this.producer.send(EVENTS.STAT_CREATED, {
+						statisticId: statistic.id,
+						tickerId: ticker.id,
+						date: price.date,
+						fromImport,
 					});
+				});
 			} catch (err) {
 				logger.error({ err, tickerId: ticker.id, date: price.date }, 'Failed calculating stats');
 			}
