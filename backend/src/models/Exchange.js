@@ -67,6 +67,11 @@ Exchange.init(
 			defaultValue: false,
 			comment: 'True once the top 100 tickers have been imported for this exchange',
 		},
+		lastDailyUpdateAt: {
+			type: DataTypes.DATE,
+			allowNull: true,
+			field: 'last_daily_update_at',
+		},
 	},
 	{
 		sequelize,

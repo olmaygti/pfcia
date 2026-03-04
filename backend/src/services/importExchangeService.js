@@ -14,6 +14,7 @@ export default class ImportExchangeService {
 	 */
 	@Inject('eodhdService')
 	async importExchange(exchangeCode) {
+		logger.info(`Importing exchange ${exchangeCode}`);
 		const exchange = await Exchange.findOne({ where: { code: exchangeCode } });
 		if (!exchange) {
 			throw new Error(`Exchange not found: ${exchangeCode}`);
@@ -32,6 +33,8 @@ export default class ImportExchangeService {
 			.sort((a, b) => (b.volume ?? 0) - (a.volume ?? 0))
 			.slice(0, TOP_N);
 
+		logger.info({ exchange: exchangeCode }, `Importing top ${top100.length} ticker(s) for ${exchangeCode}`);
+
 		for (const item of top100) {
 			try {
 				await this.importTicker({ ...item, ...(nameMap[item.code] ?? {}) }, exchange);
@@ -39,10 +42,14 @@ export default class ImportExchangeService {
 				logger.error({ err, ticker: item.code }, 'Failed to import ticker');
 			}
 		}
+
+		logger.info({ exchange: exchangeCode }, `Exchange ${exchangeCode} import complete`);
 	}
 
 	@Inject('eodhdService', 'statisticsCalculatorService')
 	async importTicker(item, exchange) {
+		logger.info({ exchange: exchange.code, ticker: item.code }, `Importing ticker ${item.code}`);
+
 		const [ticker] = await Ticker.findOrCreate({
 			where: { symbol: item.code, exchangeId: exchange.id },
 			defaults: {
@@ -54,7 +61,10 @@ export default class ImportExchangeService {
 
 		const prices = await this.eodhdService.fetchTickerEod(item.code, exchange.code);
 
-		if (!prices.length) return;
+		if (!prices.length) {
+			logger.warn({ exchange: exchange.code, ticker: item.code }, `No EOD prices found for ${item.code}, skipping`);
+			return;
+		}
 
 		await EodPrice.bulkCreate(
 			prices.map(p => ({
@@ -71,6 +81,8 @@ export default class ImportExchangeService {
 				updateOnDuplicate: ['open', 'high', 'low', 'close', 'adjustedClose', 'volume'],
 			},
 		);
+
+		logger.info({ exchange: exchange.code, ticker: item.code }, `${item.code} imported: ${prices.length} price(s) stored`);
 
 		await this.statisticsCalculatorService.calculateForTicker(ticker, prices.length, true);
 	}

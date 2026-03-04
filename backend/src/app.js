@@ -7,6 +7,7 @@ import '@/services/authService.js';
 import '@/services/eodhdService.js';
 import '@/services/importExchangeService.js';
 import '@/services/statisticsCalculatorService.js';
+import '@/services/dailyUpdateService.js';
 
 // Register controllers with the ApplicationContext
 import '@/controllers/authController.js';
@@ -16,6 +17,7 @@ import '@/controllers/tickerController.js';
 // Register broker module
 import '@/broker';
 import '@/events';
+import '@/cron';
 
 const app = express();
 
