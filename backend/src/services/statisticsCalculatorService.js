@@ -28,6 +28,7 @@ export default class StatisticsCalculatorService {
 				stats.forEach(statistic => {
 					this.producer.send(EVENTS.STAT_CREATED, {
 						statisticId: statistic.id,
+						statName: statistic.name,
 						tickerId: ticker.id,
 						date: price.date,
 						fromImport,

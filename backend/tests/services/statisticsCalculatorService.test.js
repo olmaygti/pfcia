@@ -121,19 +121,21 @@ describe('StatisticsCalculatorService', () => {
 			expect(mockProducer.send).toHaveBeenCalledTimes(6);
 		});
 
-		it('emits STAT_CREATED with tickerId, date, statisticId and fromImport=false', async () => {
+		it('emits STAT_CREATED with tickerId, date, statisticId, statName and fromImport=false', async () => {
 			EodPrice.findAll.mockResolvedValue([{ date: '2024-01-03' }]);
 
 			await service.calculateForTicker(MOCK_TICKER, 1, false);
 
 			expect(mockProducer.send).toHaveBeenCalledWith(EVENTS.STAT_CREATED, {
 				statisticId: MOCK_STAT_SEVEN.id,
+				statName: MOCK_STAT_SEVEN.name,
 				tickerId: MOCK_TICKER.id,
 				date: '2024-01-03',
 				fromImport: false,
 			});
 			expect(mockProducer.send).toHaveBeenCalledWith(EVENTS.STAT_CREATED, {
 				statisticId: MOCK_STAT_FOURTEEN.id,
+				statName: MOCK_STAT_FOURTEEN.name,
 				tickerId: MOCK_TICKER.id,
 				date: '2024-01-03',
 				fromImport: false,
