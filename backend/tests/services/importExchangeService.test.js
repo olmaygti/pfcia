@@ -10,7 +10,8 @@ import ApplicationContext from '@/ioc/applicationContext.js';
 import { Exchange, Ticker, EodPrice } from '@/models/index.js';
 
 // ---------------------------------------------------------------------------
-// Mock eodhdService — registered in the DI container so @Inject resolves it
+// Mock eodhdService and statisticsCalculatorService — registered in the DI
+// container so @Inject resolves them
 // ---------------------------------------------------------------------------
 const mockEodhdService = {
 	fetchBulkLastDay: jest.fn(),
@@ -18,9 +19,14 @@ const mockEodhdService = {
 	listExchangeTickers: jest.fn(),
 };
 
+const mockStatisticsCalculatorService = {
+	calculateForTicker: jest.fn(),
+};
+
 ApplicationContext.constructors = {
 	...ApplicationContext.constructors,
 	eodhdService: async () => mockEodhdService,
+	statisticsCalculatorService: async () => mockStatisticsCalculatorService,
 };
 
 // ---------------------------------------------------------------------------
@@ -62,6 +68,7 @@ describe('ImportExchangeService', () => {
 		Exchange.findOne.mockResolvedValue(MOCK_EXCHANGE);
 		Ticker.findOrCreate.mockResolvedValue([MOCK_TICKER, true]);
 		EodPrice.bulkCreate.mockResolvedValue([]);
+		mockStatisticsCalculatorService.calculateForTicker.mockResolvedValue();
 
 		// Obtain service from IoC — same path as production, @Inject wiring is real
 		service = await ApplicationContext.getCurrentCtx().getBean('importExchangeService');
@@ -212,6 +219,44 @@ describe('ImportExchangeService', () => {
 			await service.importTicker(item, MOCK_EXCHANGE);
 
 			expect(EodPrice.bulkCreate).not.toHaveBeenCalled();
+		});
+
+		it('calculates stats for the imported ticker after persisting prices', async () => {
+			const item = { code: 'AAPL', name: null, currency: null };
+
+			await service.importTicker(item, MOCK_EXCHANGE);
+
+			expect(mockStatisticsCalculatorService.calculateForTicker).toHaveBeenCalledWith(
+				MOCK_TICKER,
+				MOCK_EOD_PRICES.length,
+				true,
+			);
+		});
+
+		it('skips stats calculation when the EOD response is empty', async () => {
+			const item = { code: 'AAPL', name: null, currency: null };
+			mockEodhdService.fetchTickerEod.mockResolvedValue([]);
+
+			await service.importTicker(item, MOCK_EXCHANGE);
+
+			expect(mockStatisticsCalculatorService.calculateForTicker).not.toHaveBeenCalled();
+		});
+
+		it('calculates stats after bulkCreate, not before', async () => {
+			const item = { code: 'AAPL', name: null, currency: null };
+			const callOrder = [];
+			EodPrice.bulkCreate.mockImplementation(() => {
+				callOrder.push('bulkCreate');
+				return Promise.resolve([]);
+			});
+			mockStatisticsCalculatorService.calculateForTicker.mockImplementation(() => {
+				callOrder.push('calculateForTicker');
+				return Promise.resolve();
+			});
+
+			await service.importTicker(item, MOCK_EXCHANGE);
+
+			expect(callOrder).toEqual(['bulkCreate', 'calculateForTicker']);
 		});
 	});
 });
