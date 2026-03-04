@@ -41,7 +41,7 @@ export default class ImportExchangeService {
 		}
 	}
 
-	@Inject('eodhdService')
+	@Inject('eodhdService', 'statisticsCalculatorService')
 	async importTicker(item, exchange) {
 		const [ticker] = await Ticker.findOrCreate({
 			where: { symbol: item.code, exchangeId: exchange.id },
@@ -71,5 +71,7 @@ export default class ImportExchangeService {
 				updateOnDuplicate: ['open', 'high', 'low', 'close', 'adjustedClose', 'volume'],
 			},
 		);
+
+		await this.statisticsCalculatorService.calculateForTicker(ticker, prices.length, true);
 	}
 }

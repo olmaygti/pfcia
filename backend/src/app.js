@@ -6,6 +6,7 @@ import { ApplicationContext } from '@/ioc';
 import '@/services/authService.js';
 import '@/services/eodhdService.js';
 import '@/services/importExchangeService.js';
+import '@/services/statisticsCalculatorService.js';
 
 // Register controllers with the ApplicationContext
 import '@/controllers/authController.js';
@@ -13,7 +14,8 @@ import '@/controllers/exchangeController.js';
 import '@/controllers/tickerController.js';
 
 // Register broker module
-import '@/broker'
+import '@/broker';
+import '@/events';
 
 const app = express();
 
