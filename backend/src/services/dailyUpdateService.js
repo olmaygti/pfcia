@@ -100,7 +100,6 @@ export default class DailyUpdateService {
 	}
 
 	#isWeekend(now) {
-		const d = now.getUTCDay();
-		return d === 0 || d === 6;
+		return now.getUTCDay() % 6 === 0;
 	}
 }
