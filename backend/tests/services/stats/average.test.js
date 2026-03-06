@@ -1,6 +1,6 @@
 jest.mock('@/models', () => ({
 	EodPrice: { findAll: jest.fn() },
-	TickerStatistic: { create: jest.fn() },
+	TickerStatistic: { upsert: jest.fn() },
 }));
 
 import { Op } from 'sequelize';
@@ -26,7 +26,7 @@ const DATE = '2024-06-01';
 describe('average', () => {
 	beforeEach(() => {
 		jest.clearAllMocks();
-		TickerStatistic.create.mockResolvedValue({ id: 1 });
+		TickerStatistic.upsert.mockResolvedValue([{ id: 1 }, false]);
 	});
 
 	// ---------------------------------------------------------------------------
@@ -67,7 +67,7 @@ describe('average', () => {
 
 			await average('sma_3', 3, TICKER_ID, DATE);
 
-			expect(TickerStatistic.create).toHaveBeenCalledWith(expect.objectContaining({
+			expect(TickerStatistic.upsert).toHaveBeenCalledWith(expect.objectContaining({
 				value: 200,
 			}));
 		});
@@ -77,7 +77,7 @@ describe('average', () => {
 
 			await average('sma_2', 2, TICKER_ID, DATE);
 
-			expect(TickerStatistic.create).toHaveBeenCalledWith(expect.objectContaining({
+			expect(TickerStatistic.upsert).toHaveBeenCalledWith(expect.objectContaining({
 				value: 15.5,
 			}));
 		});
@@ -89,7 +89,7 @@ describe('average', () => {
 			const result = await average('sma_7', 7, TICKER_ID, DATE);
 
 			expect(result).toBeNull();
-			expect(TickerStatistic.create).not.toHaveBeenCalled();
+			expect(TickerStatistic.upsert).not.toHaveBeenCalled();
 		});
 	});
 
@@ -103,7 +103,7 @@ describe('average', () => {
 			const result = await average('sma_7', 7, TICKER_ID, DATE);
 
 			expect(result).toBeNull();
-			expect(TickerStatistic.create).not.toHaveBeenCalled();
+			expect(TickerStatistic.upsert).not.toHaveBeenCalled();
 		});
 	});
 
@@ -116,26 +116,26 @@ describe('average', () => {
 
 			await average('sma_3', 3, TICKER_ID, DATE);
 
-			expect(TickerStatistic.create).toHaveBeenCalledWith(expect.objectContaining({
+			expect(TickerStatistic.upsert).toHaveBeenCalledWith(expect.objectContaining({
 				tickerId: TICKER_ID,
 				date: DATE,
 				name: 'sma_3',
 			}));
 		});
 
-		it('returns the created statistic', async () => {
+		it('returns the upserted statistic', async () => {
 			EodPrice.findAll.mockResolvedValue(makeDatapoints(100, 200, 300));
 			const mockStat = { id: 99, value: 200 };
-			TickerStatistic.create.mockResolvedValue(mockStat);
+			TickerStatistic.upsert.mockResolvedValue([mockStat, false]);
 
 			const result = await average('sma_3', 3, TICKER_ID, DATE);
 
 			expect(result).toBe(mockStat);
 		});
 
-		it('returns undefined and does not throw when create fails', async () => {
+		it('returns undefined and does not throw when upsert fails', async () => {
 			EodPrice.findAll.mockResolvedValue(makeDatapoints(150));
-			TickerStatistic.create.mockRejectedValue(new Error('DB error'));
+			TickerStatistic.upsert.mockRejectedValue(new Error('DB error'));
 
 			await expect(average('sma_50', 50, TICKER_ID, DATE)).resolves.not.toThrow();
 		});
@@ -157,7 +157,7 @@ describe('average', () => {
 			await stats[fn](TICKER_ID, DATE);
 
 			expect(EodPrice.findAll).toHaveBeenCalledWith(expect.objectContaining({ limit: days }));
-			expect(TickerStatistic.create).toHaveBeenCalledWith(expect.objectContaining({ name }));
+			expect(TickerStatistic.upsert).toHaveBeenCalledWith(expect.objectContaining({ name }));
 		});
 	});
 });

@@ -20,12 +20,13 @@ export default async function average(name, days, tickerId, date) {
 		.reduce((acc, it) => acc + it, 0) / days;
 
 	try {
-		return await TickerStatistic.create({
+		const [statistic] = await TickerStatistic.upsert({
 			tickerId,
 			date,
 			name,
 			value: avg,
 		});
+		return statistic;
 	} catch (err) {
 		logger.error({ err, tickerId, date, name }, 'Failed saving statistic');
 	}
